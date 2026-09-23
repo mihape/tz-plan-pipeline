@@ -1,0 +1,17 @@
+# TZ Plan Pipeline - Default Configuration
+log_level: "INFO"
+
+storage:
+  projects_dir: "projects"
+  sqlite_filename: "project.db"
+
+ai:
+  default_provider: "mock"
+  timeout_seconds: 30.0
+  max_retries: 3
+
+defaults:
+  unit_system: "SI"
+  scale_tolerance_percent: 1.0
+  min_confidence_warning: 0.85
+  country_code: "HU"

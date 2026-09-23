@@ -1,0 +1,23 @@
+{
+  "project_name": "Synthetic Hungarian Residence",
+  "project_code": "SYN-2026-001",
+  "description": "Synthetic architectural fixture for unit testing and offline development",
+  "document": {
+    "filename": "synthetic_ground_floor.pdf",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pages": [
+      {
+        "page_number": 1,
+        "width_pt": 841.89,
+        "height_pt": 595.28,
+        "rotation": 0,
+        "sheet_number": "A-01",
+        "sheet_title": "Alaprajz M=1:50"
+      }
+    ]
+  },
+  "scale": {
+    "declared_ratio": 50,
+    "scale_status": "DECLARED"
+  }
+}

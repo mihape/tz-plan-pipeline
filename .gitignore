@@ -1,0 +1,101 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Local databases and runtime data
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+projects/
+data/
+runtime/
+
+# Secrets and environment configurations
+.env*
+!.env.example
+secrets.*
+*.pem
+*.key
+*.cert
+
+# Generated reports, exports, outputs
+reports/
+exports/
+output/
+*.log
+
+# Sensitive construction plans, CAD drawings, customer documents
+# Rule: Private construction drawings and customer data must NEVER be committed to Git.
+*.pdf
+*.dwg
+*.dxf
+*.ifc
+*.rvt
+*.pln
+*.skp
+drawings/
+plans/
+private/
+customer_data/
+input_drawings/
+input_plans/
+
+# Explicitly whitelist synthetic test fixtures
+!tests/fixtures/**
+!tests/fixtures/**/*.pdf
+!tests/fixtures/**/*.csv
+!tests/fixtures/**/*.xlsx
+!tests/fixtures/**/*.json
+!tests/fixtures/**/*.yaml
