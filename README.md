@@ -80,6 +80,35 @@ tz project list
 tz project info TZ-2026-BP-001
 ```
 
+### Ingest Architectural Drawings (PDF)
+```bash
+# Ingest a single PDF plan (or an entire directory)
+tz document import --project TZ-2026-BP-001 --input path/to/alaprajz.pdf
+
+# Ingest all drawings in a directory
+tz document import --project TZ-2026-BP-001 --input path/to/plans/
+```
+
+### List Project Documents & Revisions
+```bash
+tz document list --project TZ-2026-BP-001
+```
+
+### Inspect Page Inventory & Classifications
+```bash
+tz document inspect --project TZ-2026-BP-001
+```
+
+### Extract Text, Vectors & Hungarian Dimensions
+```bash
+tz document extract --project TZ-2026-BP-001
+```
+
+### Generate Diagnostic Reports & Visual Overlays
+```bash
+tz document report --project TZ-2026-BP-001
+```
+
 ---
 
 ## Running Automated Tests

@@ -7,6 +7,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from tz_plan_pipeline.cli.document import document_app
 from tz_plan_pipeline.core.config import PipelineConfig, load_config
 from tz_plan_pipeline.core.db import DatabaseManager, ProjectRepository
 from tz_plan_pipeline.core.logging import setup_logging
@@ -24,6 +25,7 @@ config_app = typer.Typer(help="View and validate pipeline configurations.")
 
 app.add_typer(project_app, name="project")
 app.add_typer(config_app, name="config")
+app.add_typer(document_app, name="document")
 
 console = Console()
 
@@ -57,7 +59,7 @@ def create_project(
     project = Project(name=name, code=code, description=description)
     repo.create_project(project)
 
-    console.print(f"[bold green]✓ Project created successfully![/bold green]")
+    console.print(f"[bold green][OK] Project created successfully![/bold green]")
     console.print(f"  [cyan]ID:[/cyan] {project.id}")
     console.print(f"  [cyan]Name:[/cyan] {project.name}")
     console.print(f"  [cyan]Code:[/cyan] {project.code}")
@@ -156,12 +158,12 @@ def validate_config(
     """Validate a YAML configuration file against schema."""
     try:
         cfg = load_config(config_path)
-        console.print(f"[bold green]✓ Configuration at '{config_path}' is valid![/bold green]")
+        console.print(f"[bold green][OK] Configuration at '{config_path}' is valid![/bold green]")
         console.print(f"  Log level: {cfg.log_level}")
         console.print(f"  Default provider: {cfg.ai.default_provider}")
         console.print(f"  Country code: {cfg.defaults.country_code}")
     except Exception as e:
-        console.print(f"[bold red]✗ Configuration validation failed:[/bold red] {e}")
+        console.print(f"[bold red][ERROR] Configuration validation failed:[/bold red] {e}")
         raise typer.Exit(code=1)
 
 

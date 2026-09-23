@@ -99,3 +99,5 @@ input_plans/
 !tests/fixtures/**/*.xlsx
 !tests/fixtures/**/*.json
 !tests/fixtures/**/*.yaml
+tests/fixtures/**/__pycache__/
+tests/fixtures/**/*.pyc

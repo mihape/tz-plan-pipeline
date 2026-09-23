@@ -84,3 +84,24 @@ class StorageError(TZPipelineError):
 class AIProviderError(TZPipelineError):
     """Raised when an AI provider fails during inference or schema extraction."""
     pass
+
+
+class CorruptedPDFError(TZPipelineError):
+    """Raised when a PDF file is unreadable, malformed, or invalid."""
+    pass
+
+
+class EncryptedPDFError(TZPipelineError):
+    """Raised when a PDF file is password-protected or encrypted."""
+    pass
+
+
+class DuplicateDocumentError(TZPipelineError):
+    """Raised when attempting to import an unchanged duplicate document."""
+    pass
+
+
+class ExtractionError(TZPipelineError):
+    """Raised when text, vector, or image extraction fails."""
+    pass
+

@@ -326,6 +326,290 @@ class ProjectRepository:
                 for r in rows
             ]
 
+    # Document & Revision Operations
+
+    def save_document(self, document: Document) -> None:
+        """Persist or update a Document record."""
+        sql = """
+        INSERT OR REPLACE INTO documents
+        (id, project_id, filename, doc_type, is_immutable, created_at, metadata_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
+        """
+        with self.db_manager.get_connection() as conn:
+            conn.execute(sql, (
+                str(document.id),
+                str(document.project_id),
+                document.filename,
+                document.doc_type.value,
+                1 if document.is_immutable else 0,
+                document.created_at.isoformat(),
+                json.dumps(document.metadata)
+            ))
+            conn.commit()
+
+    def get_document(self, document_id: UUID) -> Optional[Document]:
+        """Retrieve a Document by ID."""
+        sql = "SELECT * FROM documents WHERE id = ?;"
+        with self.db_manager.get_connection() as conn:
+            row = conn.execute(sql, (str(document_id),)).fetchone()
+            if not row:
+                return None
+            return Document(
+                id=UUID(row["id"]),
+                project_id=UUID(row["project_id"]),
+                filename=row["filename"],
+                doc_type=DocumentType(row["doc_type"]),
+                is_immutable=bool(row["is_immutable"]),
+                created_at=datetime.fromisoformat(row["created_at"]),
+                metadata=json.loads(row["metadata_json"])
+            )
+
+    def get_document_by_filename(self, project_id: UUID, filename: str) -> Optional[Document]:
+        """Find a Document within a project by original filename."""
+        sql = "SELECT * FROM documents WHERE project_id = ? AND filename = ?;"
+        with self.db_manager.get_connection() as conn:
+            row = conn.execute(sql, (str(project_id), filename)).fetchone()
+            if not row:
+                return None
+            return Document(
+                id=UUID(row["id"]),
+                project_id=UUID(row["project_id"]),
+                filename=row["filename"],
+                doc_type=DocumentType(row["doc_type"]),
+                is_immutable=bool(row["is_immutable"]),
+                created_at=datetime.fromisoformat(row["created_at"]),
+                metadata=json.loads(row["metadata_json"])
+            )
+
+    def list_documents(self, project_id: UUID) -> list[Document]:
+        """List all Documents belonging to a project."""
+        sql = "SELECT * FROM documents WHERE project_id = ? ORDER BY created_at ASC;"
+        with self.db_manager.get_connection() as conn:
+            rows = conn.execute(sql, (str(project_id),)).fetchall()
+            return [
+                Document(
+                    id=UUID(r["id"]),
+                    project_id=UUID(r["project_id"]),
+                    filename=r["filename"],
+                    doc_type=DocumentType(r["doc_type"]),
+                    is_immutable=bool(r["is_immutable"]),
+                    created_at=datetime.fromisoformat(r["created_at"]),
+                    metadata=json.loads(r["metadata_json"])
+                )
+                for r in rows
+            ]
+
+    def save_revision(self, revision: DocumentRevision) -> None:
+        """Persist or update a DocumentRevision."""
+        sql = """
+        INSERT OR REPLACE INTO document_revisions
+        (id, document_id, revision_code, file_hash, source_path, is_current, received_at, metadata_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+        """
+        with self.db_manager.get_connection() as conn:
+            # If this revision is marked current, set others for the same document to not current
+            if revision.is_current:
+                conn.execute(
+                    "UPDATE document_revisions SET is_current = 0 WHERE document_id = ?;",
+                    (str(revision.document_id),)
+                )
+            conn.execute(sql, (
+                str(revision.id),
+                str(revision.document_id),
+                revision.revision_code,
+                revision.file_hash,
+                revision.source_path,
+                1 if revision.is_current else 0,
+                revision.received_at.isoformat(),
+                json.dumps(revision.metadata)
+            ))
+            conn.commit()
+
+    def get_revision(self, revision_id: UUID) -> Optional[DocumentRevision]:
+        """Retrieve a DocumentRevision by ID."""
+        sql = "SELECT * FROM document_revisions WHERE id = ?;"
+        with self.db_manager.get_connection() as conn:
+            row = conn.execute(sql, (str(revision_id),)).fetchone()
+            if not row:
+                return None
+            return DocumentRevision(
+                id=UUID(row["id"]),
+                document_id=UUID(row["document_id"]),
+                revision_code=row["revision_code"],
+                file_hash=row["file_hash"],
+                source_path=row["source_path"],
+                is_current=bool(row["is_current"]),
+                received_at=datetime.fromisoformat(row["received_at"]),
+                metadata=json.loads(row["metadata_json"])
+            )
+
+    def get_latest_revision(self, document_id: UUID) -> Optional[DocumentRevision]:
+        """Retrieve the current active revision for a document."""
+        sql = "SELECT * FROM document_revisions WHERE document_id = ? AND is_current = 1;"
+        with self.db_manager.get_connection() as conn:
+            row = conn.execute(sql, (str(document_id),)).fetchone()
+            if not row:
+                return None
+            return DocumentRevision(
+                id=UUID(row["id"]),
+                document_id=UUID(row["document_id"]),
+                revision_code=row["revision_code"],
+                file_hash=row["file_hash"],
+                source_path=row["source_path"],
+                is_current=bool(row["is_current"]),
+                received_at=datetime.fromisoformat(row["received_at"]),
+                metadata=json.loads(row["metadata_json"])
+            )
+
+    def list_revisions(self, document_id: UUID) -> list[DocumentRevision]:
+        """List all revisions of a document ordered by reception date."""
+        sql = "SELECT * FROM document_revisions WHERE document_id = ? ORDER BY received_at ASC;"
+        with self.db_manager.get_connection() as conn:
+            rows = conn.execute(sql, (str(document_id),)).fetchall()
+            return [
+                DocumentRevision(
+                    id=UUID(r["id"]),
+                    document_id=UUID(r["document_id"]),
+                    revision_code=r["revision_code"],
+                    file_hash=r["file_hash"],
+                    source_path=r["source_path"],
+                    is_current=bool(r["is_current"]),
+                    received_at=datetime.fromisoformat(r["received_at"]),
+                    metadata=json.loads(r["metadata_json"])
+                )
+                for r in rows
+            ]
+
+    # Page Operations
+
+    def save_page(self, page: Page) -> None:
+        """Persist or update a Page."""
+        sql = """
+        INSERT OR REPLACE INTO pages
+        (id, revision_id, page_number, width_pt, height_pt, rotation, origin, dpi, scale_json, sheet_number, sheet_title, metadata_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
+        with self.db_manager.get_connection() as conn:
+            conn.execute(sql, (
+                str(page.id),
+                str(page.revision_id),
+                page.page_number,
+                page.geometry.width_pt,
+                page.geometry.height_pt,
+                page.geometry.rotation,
+                page.geometry.origin.value,
+                page.geometry.dpi,
+                page.geometry.scale.model_dump_json(),
+                page.sheet_number,
+                page.sheet_title,
+                json.dumps(page.metadata)
+            ))
+            conn.commit()
+
+    def get_pages(self, revision_id: UUID) -> list[Page]:
+        """Retrieve all Pages for a DocumentRevision ordered by page_number."""
+        sql = "SELECT * FROM pages WHERE revision_id = ? ORDER BY page_number ASC;"
+        with self.db_manager.get_connection() as conn:
+            rows = conn.execute(sql, (str(revision_id),)).fetchall()
+            pages = []
+            for r in rows:
+                scale_obj = DrawingScale.model_validate_json(r["scale_json"])
+                geom = PageGeometry(
+                    width_pt=r["width_pt"],
+                    height_pt=r["height_pt"],
+                    rotation=r["rotation"],
+                    origin=CoordinateOrigin(r["origin"]),
+                    dpi=r["dpi"],
+                    scale=scale_obj
+                )
+                pages.append(Page(
+                    id=UUID(r["id"]),
+                    revision_id=UUID(r["revision_id"]),
+                    page_number=r["page_number"],
+                    geometry=geom,
+                    sheet_number=r["sheet_number"],
+                    sheet_title=r["sheet_title"],
+                    metadata=json.loads(r["metadata_json"])
+                ))
+            return pages
+
+    def get_page_by_number(self, revision_id: UUID, page_number: int) -> Optional[Page]:
+        """Retrieve a specific page by page number."""
+        sql = "SELECT * FROM pages WHERE revision_id = ? AND page_number = ?;"
+        with self.db_manager.get_connection() as conn:
+            r = conn.execute(sql, (str(revision_id), page_number)).fetchone()
+            if not r:
+                return None
+            scale_obj = DrawingScale.model_validate_json(r["scale_json"])
+            geom = PageGeometry(
+                width_pt=r["width_pt"],
+                height_pt=r["height_pt"],
+                rotation=r["rotation"],
+                origin=CoordinateOrigin(r["origin"]),
+                dpi=r["dpi"],
+                scale=scale_obj
+            )
+            return Page(
+                id=UUID(r["id"]),
+                revision_id=UUID(r["revision_id"]),
+                page_number=r["page_number"],
+                geometry=geom,
+                sheet_number=r["sheet_number"],
+                sheet_title=r["sheet_title"],
+                metadata=json.loads(r["metadata_json"])
+            )
+
+    # Evidence Operations
+
+    def save_evidence(self, evidence: Evidence) -> None:
+        """Persist or update an Evidence record."""
+        sql = """
+        INSERT OR REPLACE INTO evidence
+        (id, page_id, x0, y0, x1, y1, source_type, text_content, visual_hash, confidence, extraction_timestamp, raw_metadata_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """
+        with self.db_manager.get_connection() as conn:
+            conn.execute(sql, (
+                str(evidence.id),
+                str(evidence.page_id),
+                evidence.bounding_box.x0,
+                evidence.bounding_box.y0,
+                evidence.bounding_box.x1,
+                evidence.bounding_box.y1,
+                evidence.source_type.value,
+                evidence.text_content,
+                evidence.visual_hash,
+                evidence.confidence,
+                evidence.extraction_timestamp.isoformat(),
+                json.dumps(evidence.raw_metadata)
+            ))
+            conn.commit()
+
+    def get_evidence_for_page(self, page_id: UUID) -> list[Evidence]:
+        """Retrieve all Evidence extracted from a specific page."""
+        sql = "SELECT * FROM evidence WHERE page_id = ? ORDER BY extraction_timestamp ASC;"
+        with self.db_manager.get_connection() as conn:
+            rows = conn.execute(sql, (str(page_id),)).fetchall()
+            return [
+                Evidence(
+                    id=UUID(r["id"]),
+                    page_id=UUID(r["page_id"]),
+                    bounding_box=BoundingBox(
+                        x0=r["x0"],
+                        y0=r["y0"],
+                        x1=r["x1"],
+                        y1=r["y1"]
+                    ),
+                    source_type=EvidenceSourceType(r["source_type"]),
+                    text_content=r["text_content"],
+                    visual_hash=r["visual_hash"],
+                    confidence=r["confidence"],
+                    extraction_timestamp=datetime.fromisoformat(r["extraction_timestamp"]),
+                    raw_metadata=json.loads(r["raw_metadata_json"])
+                )
+                for r in rows
+            ]
+
     def save_building_element(self, element: BuildingElement) -> None:
         """Persist or update a BuildingElement."""
         sql = """
